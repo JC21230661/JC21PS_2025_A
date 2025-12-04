@@ -78,4 +78,22 @@ public class JoinApprovalService {
         paramRepository.insertRequestInfo(joinApprovalDataEntity);
     }
 
+    // 承認処理：削除と登録を1つのトランザクションで実行
+    // 例外が起こったときに自動でロールバックする
+    @Transactional
+    public void approveRequest(JoinApprovalDataDto paramDto) {
+
+        // entityに値をセット
+        JoinApprovalDataEntity joinApprovalDataEntity = new JoinApprovalDataEntity();
+        joinApprovalDataEntity.setUserId(paramDto.getUserId());
+        joinApprovalDataEntity.setClubId(paramDto.getClubId());
+        joinApprovalDataEntity.setLeaderFlg(paramDto.isLeaderFlg());
+
+        // 1. 申請情報を削除
+        paramRepository.deleteRequestInfo(joinApprovalDataEntity);
+
+        // 2. クラブメンバーに登録
+        paramRepository.insertRequestInfo(joinApprovalDataEntity);
+    }
+
 }

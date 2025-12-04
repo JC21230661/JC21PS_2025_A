@@ -117,8 +117,9 @@ public class JoinApprovalController {
         paramDto.setClubId(paramForm.getClubId());
         paramDto.setLeaderFlg(paramForm.isLeaderFlg());
 
-        // セッションからclubIdを取得
+        // セッションからuserId,clubIdを取得
         SessionDto sessionDto = commonService.getSessionDto(session);
+        String userId = sessionDto.getUserId();
         String leaderClubId = sessionDto.getClubId();
 
         ModelAndView mav = new ModelAndView();
@@ -130,6 +131,11 @@ public class JoinApprovalController {
         }
 
         try {
+            // セッションが切れた場合、エラー画面に遷移する
+            if (userId.isEmpty()) {
+                mav.setViewName("error");
+                return mav;
+            }
             // サービスからdeleteメソッドを呼び出す
             joinApprovalService.deleteRequestInfo(paramDto);
             
@@ -160,8 +166,9 @@ public class JoinApprovalController {
         paramDto.setClubId(paramForm.getClubId());
         paramDto.setLeaderFlg(paramForm.isLeaderFlg());
 
-        // セッションからclubIdを取得
+        // セッションからuserId,clubIdを取得
         SessionDto sessionDto = commonService.getSessionDto(session);
+        String userId = sessionDto.getUserId();
         String leaderClubId = sessionDto.getClubId();
 
         ModelAndView mav = new ModelAndView();
@@ -173,11 +180,13 @@ public class JoinApprovalController {
         }
 
         try {
-            // 1. 申請情報を削除
-            joinApprovalService.deleteRequestInfo(paramDto);
-
-            // 2. クラブメンバーに登録
-            joinApprovalService.insertRequestInfo(paramDto);
+            // セッションが切れた場合、エラー画面に遷移する
+            if (userId.isEmpty()) {
+                mav.setViewName("error");
+                return mav;
+            }
+            // 承認処理（削除と登録を1つのトランザクションで実行）
+            joinApprovalService.approveRequest(paramDto);
 
             // メッセージプロパティから承認メッセージを取得
             String approvalMessage = messageSource.getMessage("approvalMessage", null, Locale.getDefault());
